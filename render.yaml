@@ -2,6 +2,7 @@ services:
   - type: web
     name: django-backend
     env: python
+    pythonVersion: 3.12.7
     rootDir: .
     buildCommand: |
       pip install --upgrade pip setuptools wheel
