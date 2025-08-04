@@ -12,6 +12,7 @@ router.register(r'collection-points', views.CollectionPointViewSet)
 router.register(r'trucks', views.TruckViewSet)
 router.register(r'reports', views.ReportViewSet)
 router.register(r'schedules', views.ScheduleViewSet)
+router.register(r'schedule-routes', views.ScheduleRouteViewSet)
 router.register(r'incidents', views.IncidentViewSet)
 router.register(r'statistics', views.StatisticsViewSet)
 

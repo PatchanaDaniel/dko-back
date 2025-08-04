@@ -86,6 +86,7 @@ DATABASES = {
         default=os.environ["DATABASE_URL"]
     )
 }
+print("Database configuration:", os.environ["DATABASE_URL"])
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

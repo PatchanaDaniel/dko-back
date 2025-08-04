@@ -6,12 +6,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from .models import (
     Team, CollectionPoint, Truck, Report, Schedule, 
-    Incident, Statistics
+    ScheduleRoute, Incident, Statistics
 )
 from .serializers import (
     TeamSerializer, CollectionPointSerializer, TruckSerializer,
     ReportSerializer, ReportCreateSerializer, ScheduleSerializer,
-    ScheduleCreateSerializer, IncidentSerializer, IncidentCreateSerializer,
+    ScheduleCreateSerializer, ScheduleRouteSerializer, IncidentSerializer, IncidentCreateSerializer,
     StatisticsSerializer
 )
 
@@ -179,6 +179,45 @@ class TruckViewSet(viewsets.ModelViewSet):
         return Response({
             'success': False,
             'message': 'Statut invalide'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['patch'], url_path='estimated-time')
+    def update_estimated_time(self, request, pk=None):
+        """
+        Mettre à jour le temps estimé pour atteindre le prochain point de collecte
+        PATCH /api/trucks/{id}/estimated-time/
+        Body: {"estimated_time": 15}
+        """
+        truck = self.get_object()
+        estimated_time = request.data.get('estimated_time')
+        
+        if estimated_time is not None:
+            try:
+                estimated_time = int(estimated_time)
+                if estimated_time < 0:
+                    return Response({
+                        'success': False,
+                        'message': 'Le temps estimé doit être positif'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                truck.estimated_time = estimated_time
+                truck.save()
+                
+                serializer = self.get_serializer(truck)
+                return Response({
+                    'success': True,
+                    'data': serializer.data,
+                    'message': 'Temps estimé mis à jour avec succès'
+                })
+            except (ValueError, TypeError):
+                return Response({
+                    'success': False,
+                    'message': 'Temps estimé invalide. Veuillez fournir un nombre entier.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            'success': False,
+            'message': 'Le champ estimated_time est requis'
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -428,4 +467,46 @@ class StatisticsViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({
             'success': True,
             'data': default_stats
+        })
+
+class ScheduleRouteViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet pour gérer les points de route des plannings
+    """
+    queryset = ScheduleRoute.objects.all()
+    serializer_class = ScheduleRouteSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['schedule', 'completed']
+
+    @action(detail=True, methods=['patch'])
+    def mark_completed(self, request, pk=None):
+        """
+        Marquer un point de route comme complété
+        """
+        route_point = self.get_object()
+        route_point.completed = True
+        route_point.completed_at = timezone.now()
+        route_point.save()
+        
+        serializer = self.get_serializer(route_point)
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })
+
+    @action(detail=True, methods=['patch'])
+    def mark_incomplete(self, request, pk=None):
+        """
+        Marquer un point de route comme non complété
+        """
+        route_point = self.get_object()
+        route_point.completed = False
+        route_point.completed_at = None
+        route_point.save()
+        
+        serializer = self.get_serializer(route_point)
+        return Response({
+            'success': True,
+            'data': serializer.data
         })

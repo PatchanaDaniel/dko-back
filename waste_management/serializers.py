@@ -152,7 +152,7 @@ class ScheduleRouteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ScheduleRoute
-        fields = ['collection_point', 'order', 'completed', 'completed_at']
+        fields = ['id', 'collection_point', 'order', 'completed', 'completed_at']
 
 class ScheduleSerializer(serializers.ModelSerializer):
     team_id = serializers.CharField(source='team.id', read_only=True)
